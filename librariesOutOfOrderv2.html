@@ -1,0 +1,206 @@
+<script src = "../librarySystem/tinytest.js"></script>
+<script src = "../librarySystem/underscore.js" ></script>
+<script> 
+
+  /*
+  * libraryStorage object is used to store libraries in the form: 
+  *  - {libraryName: library}
+  * dependencyRelationship object is used to store arguments when a library with dependencies is created using librarySystem. 
+  *  - {libraryName: [dependencyArray, callback function, callbackArgumentsArray]}
+  *  - dependencyRelationship[libraryName][0] -> dependencyArray 
+  *  - dependencyRelationship[libraryName][1] -> callback function
+  *  - dependencyRelationship[libraryName][2] -> callbackArgumentsArray
+  * To create a library use one of the two forms:
+  *  - library with no dependencies: librarySystem(libraryName, [], function() {return library})
+  *  - library with dependencies:    librarySystem(libraryName, [dependentOne], function (dependentOneLibrary) {return dependentOneLibrary}) 
+  * To retrieve a library, use the form: 
+  *  - librarySystem(libraryName)
+  */  
+  
+  
+  
+  
+  (function (root) {
+  
+    var libraryStorage = {}; 
+
+    var dependencyRelationship = {}; 
+  
+    var applyArgumentsToFunction = function applyArgumentsToFunction (callback, argumentsArray) {
+      return callback.apply(null, argumentsArray);      
+    };
+
+    var dependencyLoading = function dependencyLoading (libraryName) {
+      
+      if (dependencyRelationship[libraryName]) {
+        dependencyRelationship[libraryName][0].forEach(function (dependent) {
+          if (libraryStorage[dependent]) {
+            dependencyRelationship[libraryName][2].push(libraryStorage[dependent]);
+          } else {
+            libraryStorage[dependent] = null;
+          }
+        });
+        libraryStorage[libraryName] = applyArgumentsToFunction(dependencyRelationship[libraryName][1], _.uniq(dependencyRelationship[libraryName][2]));
+      } 
+    };
+  
+    var librarySystem = function librarySystem (libraryName, dependencyArray, callback) {
+      
+      // create a library if more than one argument
+      if (arguments.length > 1) {
+        
+        // if dependencyArray has no elements, for library with no dependencies
+        if (dependencyArray.length === 0) {
+  
+          // check to see if the library is already created with non-null value, else create the library
+          if (libraryStorage[libraryName]) {
+            throw new Error (libraryName + ' already exists');
+
+          } else {
+            
+            // store the library in libraryStorage
+            libraryStorage[libraryName] = callback();
+            
+            // if libraryName is a dependency to another library, update the dependentLibrary  
+            // using dependencyLoading(dependentLibraryName)
+            var keyStore = '';
+
+            _.each(dependencyRelationship, function (value, key) {
+                value[0].forEach(function (element) {
+                  if (libraryName === element) {keyStore = key;}
+                });
+            });
+
+            if (keyStore) {dependencyLoading(keyStore);}
+
+          }
+
+        }  
+          // dependency array has > 0 elements, library with dependencies
+          else {
+            
+            // create dependencyRelationship object with libraryName as key and array of values from arguments of librarySystem 
+            dependencyRelationship[libraryName] = [dependencyArray, callback, []];  
+
+            dependencyLoading(libraryName);
+        }
+      }
+       // retrieve library  
+       else {
+        return libraryStorage[libraryName];
+      }
+
+    };
+    
+    // export librarySystem to global window object
+    root['librarySystem'] = librarySystem;
+  
+  })(this);
+
+  /* Tests:
+  * 1. It should create a library with libraryName as the first argument.
+  * 2. It should retrieve the library when libraryName is passed as the only argument.
+  * 3. It should be able to create a dependentLibrary before its dependencyLibraries are created. 
+  * 4. It should be able to create a dependentLibrary after its dependencyLibraries are created.
+  * 5. It should update the dependentLibrary when all of its dependencyLibraries are created. 
+  * 6. It should invoke callback for each library only once. In the case where library has no dependencies.
+  * 7. It should invoke callback for each library only once. In the case where library has dependencies.
+  */
+
+  tests ({
+      'it should create a library with libraryName as the first argument.': function () {
+        librarySystem ('testLibraryName', [], function() {
+          return 'testResult';
+        });
+          eq (librarySystem('testLibraryName'), 'testResult');
+      },
+  
+      'it should retrieve the library when libraryName is passed as the only argument.': function () {
+        librarySystem ('sampleLibraryName', [], function () {
+          return 'sample';
+        });
+        var testResult = librarySystem ('sampleLibraryName');
+        eq (testResult, 'sample');
+      },
+  
+      'it should be able to create a dependentLibrary before its dependencyLibraries are created.': function () {
+        librarySystem ('testLibraryWith2Dependencies', ['dependency:1', 'dependency:2'], function (argumentOne, argumentTwo){
+          return 'testLibraryWith2Dependencies';    
+        });
+        var testLibraryName = librarySystem('testLibraryWith2Dependencies');   
+        var dependencyOneLibrary = librarySystem('dependency:1');
+        var dependencyTwoLibrary = librarySystem('dependency:2'); 
+          
+        eq (testLibraryName, 'testLibraryWith2Dependencies');
+        eq (dependencyOneLibrary, null);
+        eq (dependencyOneLibrary, null);
+      },
+  
+      'it should be able to create a dependentLibrary after its dependencyLibraries are created.': function () {
+        librarySystem ('course', [], function () {
+          return 'Premium JS';
+        });
+  
+        librarySystem ('resource', [], function () {
+          return 'Watch and Code';
+        });
+  
+        librarySystem ('detail', ['course', 'resource'], function (course, resource ) {
+          return 'I am pursuing ' + course + ' @ ' + resource;
+        });
+  
+        var testResult = librarySystem ('detail');
+  
+        eq (testResult, 'I am pursuing Premium JS @ Watch and Code');
+      },
+  
+      'it should update the dependentLibrary when all of its dependencyLibraries are created.': function () {
+        librarySystem ('testLibraryWithDependencies', ['dependencyOne', 'dependencyTwo'], function (argumentOne, argumentTwo) {
+          return argumentOne + argumentTwo;
+        });
+        
+        librarySystem ('dependencyOne', [], function () {
+           return 'dependencyOneLibrary ';     
+        });
+  
+        librarySystem ('dependencyTwo', [], function () {
+           return 'dependencyTwoLibrary';     
+        });
+         
+         var dependentLibrary = librarySystem ('testLibraryWithDependencies');
+         eq (dependentLibrary, 'dependencyOneLibrary dependencyTwoLibrary');
+      },
+  
+      'it should invoke callback for each library only once. In the case where library has no dependencies.': function () {
+        var callbackCount = 0;
+        
+        librarySystem ('sampleLibraryOne', [], function () {
+          callbackCount++;
+          return 'LibraryOne';
+        });
+        
+        librarySystem('sampleLibraryOne');
+        librarySystem('sampleLibraryOne');
+        librarySystem('sampleLibraryOne');
+  
+        eq (callbackCount, 1);
+      }, 
+  
+      'it should invoke callback for each library only once. In the case where library has dependencies.': function () {
+        var callbackCount = 0;
+        librarySystem ('sampleLibraryTwo', ['testDependency'], function (argumentOne) {
+          callbackCount++;
+          return 'LibraryTwo';
+        })
+  
+        librarySystem('sampleLibraryTwo');
+        librarySystem('sampleLibraryTwo');
+        librarySystem('sampleLibraryTwo');
+  
+        eq (callbackCount, 1);
+      }
+  
+    });
+
+
+</script>
