@@ -23,7 +23,6 @@
   (function (root) {
   
     var libraryStorage = {}; 
-
     var dependencyRelationship = {}; 
   
     var applyArgumentsToFunction = function applyArgumentsToFunction (callback, argumentsArray) {
@@ -70,18 +69,14 @@
                   if (libraryName === element) {keyStore = key;}
                 });
             });
-
             if (keyStore) {dependencyLoading(keyStore);}
-
           }
-
         }  
           // dependency array has > 0 elements, library with dependencies
           else {
-            
+       
             // create dependencyRelationship object with libraryName as key and array of values from arguments of librarySystem 
             dependencyRelationship[libraryName] = [dependencyArray, callback, []];  
-
             dependencyLoading(libraryName);
         }
       }
@@ -89,12 +84,11 @@
        else {
         return libraryStorage[libraryName];
       }
-
     };
     
     // export librarySystem to global window object
     root['librarySystem'] = librarySystem;
-  
+    
   })(this);
 
   /* Tests:
