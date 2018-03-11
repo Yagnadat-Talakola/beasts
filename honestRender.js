@@ -60,18 +60,18 @@ jQuery(function ($) {
 			}).init('/all');
 		},
         
-        /* elementStorage method to invoke util.store based on the following: 
-        *  if one argument passed -> invokes util.store(namespace, data)
-        *  if no arguments passed -> inokes and returns util.store(namespace)
-        */
-        elementStorage: function(todos) {
-            if (arguments.length === 1) {
-              util.store('todos-jquery', todos);
-            } else {
-              return util.store('todos-jquery');
-            }
-        },
-        bindEvents: function() {
+        	/* elementStorage method to invoke util.store based on the following: 
+        	*  if one argument passed -> invokes util.store(namespace, data)
+       	 	*  if no arguments passed -> inokes and returns util.store(namespace)
+        	*/
+       		elementStorage: function(todos) {
+            		if (arguments.length === 1) {
+              	  	  util.store('todos-jquery', todos);
+            		} else {
+              	  	  return util.store('todos-jquery');
+            		}
+       		},
+        	bindEvents: function() {
 			$('#new-todo').on('keyup', this.create.bind(this));
 			$('#toggle-all').on('change', this.toggleAll.bind(this));
 			$('#footer').on('click', '#clear-completed', this.destroyCompleted.bind(this));
@@ -109,8 +109,8 @@ jQuery(function ($) {
 				todo.completed = isChecked;
 			});
 
-            this.elementStorage(this.todos);
-            this.render();
+            		this.elementStorage(this.todos);
+           		this.render();
       
 		},
 		getActiveTodos: function() {
@@ -138,7 +138,7 @@ jQuery(function ($) {
 			this.todos = this.getActiveTodos();
 			this.filter = 'all';
 			this.elementStorage(this.todos);
-            this.render();
+            		this.render();
 		},
 		
 		indexFromEl: function(el) {
@@ -169,13 +169,13 @@ jQuery(function ($) {
 			$input.val('');
 
 			this.elementStorage(this.todos);
-            this.render();
+            		this.render();
 		},
 		toggle: function(e) {
 			var i = this.indexFromEl(e.target);
 			this.todos[i].completed = !this.todos[i].completed;
 			this.elementStorage(this.todos);
-            this.render();
+            		this.render();
 		},
 		edit: function(e) {
 			var $input = $(e.target).closest('li').addClass('editing').find('.edit');
@@ -207,12 +207,12 @@ jQuery(function ($) {
 			}
 
 			this.elementStorage(this.todos);
-            this.render();
+            		this.render();
 		},
 		destroy: function(e) {
 			this.todos.splice(this.indexFromEl(e.target), 1);
 			this.elementStorage(this.todos);
-            this.render();
+            		this.render();
 		}
 	};
 
