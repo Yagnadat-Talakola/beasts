@@ -26,8 +26,7 @@
       return callback.apply(null, argumentsArray);      
     };
 
-    var dependencyLoading = function dependencyLoading (libraryName) {
-      
+    var dependencyLoading = function dependencyLoading (libraryName) {    
       if (dependencyRelationship[libraryName]) {
         dependencyRelationship[libraryName][0].forEach(function (dependent) {
           if (libraryStorage[dependent]) {
