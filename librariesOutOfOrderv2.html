@@ -17,9 +17,6 @@
   *  - librarySystem(libraryName)
   */  
   
-  
-  
-  
   (function (root) {
   
     var libraryStorage = {}; 
@@ -54,7 +51,6 @@
           // check to see if the library is already created with non-null value, else create the library
           if (libraryStorage[libraryName]) {
             throw new Error (libraryName + ' already exists');
-
           } else {
             
             // store the library in libraryStorage
@@ -69,6 +65,7 @@
                   if (libraryName === element) {keyStore = key;}
                 });
             });
+            
             if (keyStore) {dependencyLoading(keyStore);}
           }
         }  
